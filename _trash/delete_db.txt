@@ -1,0 +1,13 @@
+def delete_election(election_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM elections WHERE election_id=?", (election_id,))
+        conn.commit()
+        deleted = cursor.rowcount > 0
+        conn.close()
+        if deleted:
+            return {"success": True}
+        return {"success": False, "message": "Election not found"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}

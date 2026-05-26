@@ -1,0 +1,12 @@
+# Secure E-Voting System - Python Dependencies
+
+# Web Framework
+Flask==3.0.0
+Flask-CORS==4.0.0
+
+# Blockchain Integration
+web3==6.11.3
+
+# Utilities
+python-dotenv==1.0.0
+gunicorn==21.2.0

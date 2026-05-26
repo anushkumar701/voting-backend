@@ -1,0 +1,364 @@
+/* ════════════════════════════════════════════
+   LOGIN.CSS  — 3D Holographic Login Portal
+   ════════════════════════════════════════════ */
+
+/* ─── Scene & Background ─── */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 20% 50%, rgba(0,40,80,0.6) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(60,0,120,0.5) 0%, transparent 60%),
+              #020408;
+}
+
+/* ─── Animated Grid Floor ─── */
+.cyber-bg {
+  position: absolute; inset: 0;
+  perspective: 600px;
+}
+
+.cyber-grid {
+  position: absolute;
+  width: 200%; height: 200%;
+  left: -50%; top: -20%;
+  background-image:
+    linear-gradient(rgba(0,242,255,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,242,255,0.08) 1px, transparent 1px);
+  background-size: 60px 60px;
+  transform: rotateX(65deg) translateZ(-100px);
+  animation: gridFly 12s linear infinite;
+  transform-origin: center center;
+}
+
+@keyframes gridFly {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 60px; }
+}
+
+/* ─── Floating Orbs ─── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  animation: orbFloat 8s ease-in-out infinite alternate;
+}
+.orb-1 { width:300px; height:300px; background:rgba(0,242,255,0.12); top:-80px; left:-80px; animation-duration:9s; }
+.orb-2 { width:200px; height:200px; background:rgba(112,0,255,0.15); bottom:20px; right:-60px; animation-duration:7s; animation-delay:2s; }
+.orb-3 { width:150px; height:150px; background:rgba(0,100,255,0.1); top:40%; left:60%; animation-duration:11s; animation-delay:1s; }
+
+@keyframes orbFloat {
+  from { transform: translate(0,0) scale(1); }
+  to   { transform: translate(30px,20px) scale(1.15); }
+}
+
+/* ─── Particles ─── */
+.particles { position: absolute; inset: 0; overflow: hidden; }
+
+.particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: rgba(0,242,255,0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0,242,255,0.8);
+  animation: particleRise 10s ease-in infinite;
+}
+
+@keyframes particleRise {
+  0%   { opacity: 0; transform: translateY(0) translateX(0) scale(1); }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-100vh) translateX(40px) scale(0.3); }
+}
+
+/* ─── Login Panel (3D Card) ─── */
+.login-panel {
+  position: relative; z-index: 10;
+  width: 440px;
+  background: linear-gradient(
+    145deg,
+    rgba(8,15,25,0.95) 0%,
+    rgba(12,20,35,0.95) 50%,
+    rgba(8,15,28,0.95) 100%
+  );
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(0,242,255,0.18);
+  border-radius: 24px;
+  padding: 44px 40px;
+  box-shadow:
+    0 0 0 1px rgba(0,242,255,0.05),
+    0 20px 60px rgba(0,0,0,0.8),
+    0 0 80px rgba(0,242,255,0.06),
+    inset 0 1px 0 rgba(0,242,255,0.1);
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
+}
+
+/* glowing top edge */
+.login-panel::before {
+  content: '';
+  position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,242,255,0.6), transparent);
+  border-radius: 1px;
+}
+
+/* scanning line effect */
+.login-panel::after {
+  content: '';
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0,242,255,0.3), transparent);
+  animation: scanLine 4s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: 0 0 24px 24px;
+  top: 0;
+}
+
+@keyframes scanLine {
+  0%   { top: 0%; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 0.5; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* ─── Logo Section ─── */
+.logo-section { text-align: center; margin-bottom: 32px; }
+
+.logo-hex {
+  width: 90px; height: 90px;
+  margin: 0 auto 18px;
+  position: relative;
+}
+
+.logo-hex::before {
+  content: '';
+  position: absolute; inset: -8px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #00f2ff, #7000ff, #00f2ff);
+  animation: spinRing 3s linear infinite;
+  opacity: 0.4;
+  filter: blur(4px);
+}
+
+@keyframes spinRing {
+  to { transform: rotate(360deg); }
+}
+
+.logo-hex svg {
+  width: 100%; height: 100%;
+  position: relative; z-index: 1;
+  filter: drop-shadow(0 0 18px rgba(0,242,255,0.7));
+  animation: hexPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes hexPulse {
+  0%,100% { filter: drop-shadow(0 0 18px rgba(0,242,255,0.7)); transform: scale(1); }
+  50%      { filter: drop-shadow(0 0 30px rgba(0,242,255,1)); transform: scale(1.04); }
+}
+
+.title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 26px; font-weight: 900;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, #00f2ff 0%, #a0f0ff 40%, #7000ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: rgba(0,242,255,0.5);
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+/* ─── Form ─── */
+.login-form {
+  display: flex; flex-direction: column; gap: 18px;
+}
+
+/* Error / Success boxes */
+.error-box {
+  background: rgba(255,0,80,0.08);
+  border: 1px solid rgba(255,0,80,0.35);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #ff4488;
+  font-weight: 600;
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  animation: shake 0.4s ease;
+}
+
+.success-box {
+  background: rgba(0,255,136,0.07);
+  border: 1px solid rgba(0,255,136,0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #00ff88;
+  font-weight: 600;
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+}
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-8px); }
+  60%      { transform: translateX(8px); }
+}
+
+/* Input Group */
+.input-group { position: relative; }
+
+.input-field {
+  width: 100%;
+  padding: 15px 20px;
+  background: rgba(0,242,255,0.03);
+  border: 1px solid rgba(0,242,255,0.18);
+  border-radius: 14px;
+  color: #e0f8ff;
+  font-size: 15px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.35s ease;
+  letter-spacing: 0.5px;
+}
+
+.input-field::placeholder { color: rgba(0,242,255,0.28); }
+
+.input-field:focus {
+  background: rgba(0,242,255,0.07);
+  border-color: rgba(0,242,255,0.55);
+  box-shadow: 0 0 0 3px rgba(0,242,255,0.08), 0 0 25px rgba(0,242,255,0.15);
+  transform: translateY(-1px);
+}
+
+/* Submit button */
+.submit-btn {
+  padding: 16px;
+  background: linear-gradient(135deg, #00c8ff, #5500ff);
+  border: none;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 15px; font-weight: 700;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 30px rgba(0,200,255,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+  position: relative; overflow: hidden;
+  text-transform: uppercase;
+}
+
+.submit-btn::before {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+}
+
+.submit-btn:not(:disabled):hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 8px 40px rgba(0,200,255,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.submit-btn:not(:disabled):hover::before { left: 150%; }
+
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Back button on login */
+.back-btn-login {
+  padding: 12px;
+  background: rgba(0,242,255,0.05);
+  border: 1px solid rgba(0,242,255,0.2);
+  border-radius: 12px;
+  color: rgba(0,242,255,0.7);
+  font-size: 13px; font-weight: 600;
+  font-family: 'Orbitron', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s;
+  letter-spacing: 1px;
+}
+
+.back-btn-login:hover {
+  background: rgba(0,242,255,0.1);
+  border-color: rgba(0,242,255,0.4);
+  transform: translateX(-3px);
+}
+
+/* OTP display box */
+.otp-display {
+  background: linear-gradient(135deg, rgba(0,242,255,0.08), rgba(112,0,255,0.08));
+  border: 1px solid rgba(0,242,255,0.25);
+  border-radius: 14px;
+  padding: 14px 18px;
+  text-align: center;
+}
+
+.otp-display p {
+  color: rgba(255,255,255,0.8);
+  font-size: 15px;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.otp-display strong {
+  color: #00f2ff;
+  font-size: 22px;
+  letter-spacing: 6px;
+  display: block;
+  margin-top: 4px;
+  text-shadow: 0 0 20px rgba(0,242,255,0.8);
+}
+
+.otp-display small {
+  color: rgba(255,255,255,0.35);
+  font-size: 11px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Role links */
+.links {
+  margin-top: 22px;
+  display: flex; justify-content: center; gap: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0,242,255,0.08);
+}
+
+.links a {
+  color: rgba(0,242,255,0.5);
+  text-decoration: none;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-family: 'Share Tech Mono', monospace;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.links a::after {
+  content: '';
+  position: absolute; bottom: -2px; left: 0; right: 0; height: 1px;
+  background: #00f2ff;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.links a:hover { color: #00f2ff; }
+.links a:hover::after { transform: scaleX(1); }
+
+@media (max-width: 500px) {
+  .login-panel { width: 92%; padding: 32px 24px; }
+  .title { font-size: 20px; }
+}

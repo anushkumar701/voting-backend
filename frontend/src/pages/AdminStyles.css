@@ -1,0 +1,30 @@
+/* AdminStyles.css — kept for candidate tags & cancel */
+
+.candidates-list-simple {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 14px 0;
+}
+
+.candidate-tag {
+  background: rgba(0,242,255,0.07);
+  border: 1px solid rgba(0,242,255,0.2);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px; color: rgba(0,242,255,0.8);
+  font-family: 'Rajdhani', sans-serif; font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+
+.candidate-tag:hover {
+  background: rgba(0,242,255,0.12);
+  border-color: rgba(0,242,255,0.35);
+  color: #00f2ff;
+  transform: translateY(-1px);
+}
+
+.action-btn.cancel {
+  background: rgba(255,60,80,0.1);
+  border: 1px solid rgba(255,60,80,0.3);
+  color: #ff4460;
+}

@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Rajdhani', sans-serif;
+  background: #020408;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #020408; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00f2ff, #7000ff);
+  border-radius: 3px;
+}
+
+.App { min-height: 100vh; }
+
+@keyframes gridScroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(60px); }
+}
+
+/* ─── Global 3D Scene Base ─── */
+.scene-3d {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+/* ─── Neon Glow Utilities ─── */
+.glow-cyan  { box-shadow: 0 0 20px rgba(0,242,255,0.4), 0 0 60px rgba(0,242,255,0.1); }
+.glow-purple{ box-shadow: 0 0 20px rgba(112,0,255,0.4), 0 0 60px rgba(112,0,255,0.1); }
+.glow-green { box-shadow: 0 0 20px rgba(0,255,136,0.4), 0 0 60px rgba(0,255,136,0.1); }

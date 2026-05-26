@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Test</title>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    <button onclick="testHealth()">Test Health</button>
+    <button onclick="testLogin()">Test Login</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testHealth() {
+            try {
+                const res = await fetch('http://localhost:5000/api/health');
+                const data = await res.json();
+                document.getElementById('result').textContent = 'HEALTH:\n' + JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('result').textContent = 'ERROR:\n' + err.message;
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const res = await fetch('http://localhost:5000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@admin.com',
+                        password: 'admin123'
+                    })
+                });
+                const data = await res.json();
+                document.getElementById('result').textContent = 'LOGIN:\n' + JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('result').textContent = 'ERROR:\n' + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
