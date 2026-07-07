@@ -1,6 +1,20 @@
-# 🗳️ E-Voting Meets Blockchain
+# 🗳️ Secure E-Voting System
 
-A secure, full-stack electronic voting system combining **Flask**, **React**, **Ethereum Blockchain**, **Face Recognition**, and **OTP Authentication**.
+A full-stack electronic voting platform with **blockchain-simulated immutability**, **role-based access control**, **OTP authentication**, and a polished **React** frontend.
+
+> Built with Flask · React 18 · SQLite · Framer Motion
+
+---
+
+## ✨ Features
+
+- **Three-role architecture** — Admin, Election Officer, and Voter portals
+- **Blockchain-simulated ledger** — Tamper-proof election records with cryptographic transaction hashes
+- **OTP authentication** — 6-digit OTP with expiry and lockout protection for voters
+- **Election lifecycle** — Create → Activate → Vote → Close → Archive
+- **Real-time vote tallying** — Live candidate vote bars on the admin dashboard
+- **Auto-generated Ethereum addresses** — Unique voter identities assigned automatically
+- **Responsive cyberpunk UI** — Dark-themed interface with micro-animations
 
 ---
 
@@ -9,24 +23,34 @@ A secure, full-stack electronic voting system combining **Flask**, **React**, **
 ### Prerequisites
 - Python 3.10+
 - Node.js 18+
-- [Ganache](https://trufflesuite.com/ganache/) running on port **7545**
-- Contract deployed via [Remix IDE](https://remix.ethereum.org)
 
-### Run the System
+### 1. Backend
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the server
+python app.py
 ```
-Double-click → START_BOTH.bat
+Backend starts at `http://localhost:5000`
+
+### 2. Frontend
+```bash
+cd frontend
+npm install
+npm start
 ```
-Opens backend on `http://localhost:5000` and frontend on `http://localhost:3000`.
+Frontend starts at `http://localhost:3000`
 
 ---
 
-## 🔐 Login Credentials
+## 🔐 Default Credentials
 
-| Role    | Email / ID             | Password / Method |
+| Role    | Login                  | Method            |
 |---------|------------------------|-------------------|
-| Admin   | admin@admin.com        | admin123          |
-| Officer | officer@admin.com      | officer123        |
-| Voter   | Voter ID (e.g. V001)   | OTP via phone     |
+| Admin   | admin@admin.com        | Password: admin123|
+| Officer | officer@admin.com      | Password: officer123|
+| Voter   | Voter ID (e.g. V001)  | OTP via phone     |
 
 ---
 
@@ -34,49 +58,29 @@ Opens backend on `http://localhost:5000` and frontend on `http://localhost:3000`
 
 ```
 voting-backend/
-├── app.py                    ← Flask REST API (main entry point)
-├── otp_manager.py            ← OTP generation & verification
-├── face_recognition_system.py← Face registration & live verification
-├── requirements.txt          ← Python dependencies
-├── START_BOTH.bat            ← One-click startup script
+├── app.py                     ← Flask REST API (main entry)
+├── otp_manager.py             ← OTP generation & verification
+├── requirements.txt           ← Python dependencies
+├── Procfile                   ← Production server config
 │
 ├── database/
-│   └── db_setup.py           ← SQLite schema & queries
+│   └── db_setup.py            ← SQLite schema & queries
 │
 ├── utils/
-│   ├── blockchain_utils.py   ← Web3 / Ganache integration
-│   ├── load_contract.py      ← Contract loader helper
-│   └── ...
+│   └── blockchain_utils.py    ← Blockchain simulator engine
 │
 ├── contracts/
-│   └── SecureVoting_ABI.json ← Deployed Solidity contract ABI
+│   ├── SecureVoting.sol        ← Original Solidity smart contract
+│   └── SecureVoting_ABI.json   ← Contract ABI reference
 │
-├── face_data/                ← Voter face encodings (auto-generated)
-├── face/                     ← Sample face images
-│
-└── frontend/                 ← React 18 SPA
-    └── src/pages/
-        ├── AdminLogin.js / AdminDashboard.js
-        ├── OfficerLogin.js / OfficerDashboard.js
-        └── VoterLogin.js / VoterDashboard.js
+└── frontend/                  ← React 18 SPA
+    └── src/
+        ├── api.js             ← API base URL config
+        └── pages/
+            ├── AdminLogin.js / AdminDashboard.js
+            ├── OfficerLogin.js / OfficerDashboard.js
+            └── VoterLogin.js / VoterDashboard.js
 ```
-
----
-
-## ⚙️ Setup Steps
-
-1. **Start Ganache** — set port to 7545
-2. **Deploy contract** via Remix IDE using `contracts/SecureVoting_ABI.json`
-3. **Copy contract address** → paste into `contract_address.txt`
-4. **Install Python deps:**
-   ```
-   pip install -r requirements.txt
-   ```
-5. **Install frontend deps:**
-   ```
-   cd frontend && npm install
-   ```
-6. **Run:** `START_BOTH.bat`
 
 ---
 
@@ -84,28 +88,73 @@ voting-backend/
 
 ```
 Admin: Create Election  →  CREATED
-Admin: Activate         →  ACTIVE   ← Voters can vote
-Admin: Close            →  CLOSED
+Admin: Activate         →  ACTIVE   ← Voters can cast votes
+Admin: Close            →  CLOSED   ← Results finalized
 Admin: Archive          →  ARCHIVED
 ```
 
 ---
 
-## 🛡️ Security Layers
+## 🛡️ Security
 
-| Layer            | Technology                      |
-|------------------|---------------------------------|
-| OTP Auth         | 6-digit, 5-min expiry, lockout  |
-| Face Recognition | OpenCV + face_recognition lib   |
-| Blockchain       | Ethereum / Ganache (immutable)  |
-| Role Access      | Header-based RBAC               |
-| Input Sanitize   | Regex filtering on all inputs   |
+| Layer              | Implementation                        |
+|--------------------|---------------------------------------|
+| OTP Authentication | 6-digit, 5-min expiry, 3-attempt lock |
+| Blockchain Ledger  | In-memory simulator with SHA-256 hashes|
+| Role-Based Access  | Header-based RBAC middleware          |
+| Input Sanitization | Regex filtering on all user inputs    |
+| CORS Protection    | Configurable origin restriction       |
+
+---
+
+## ⚙️ Deployment
+
+### Backend (Railway / Render)
+1. Connect this repository
+2. Set environment variables from `.env.example`
+3. Deploy — uses `Procfile` for Gunicorn
+
+### Frontend (Netlify)
+1. Base directory: `frontend`
+2. Build command: `npm install --legacy-peer-deps && npm run build`
+3. Set `REACT_APP_API_URL` to your backend URL
 
 ---
 
 ## 📦 Tech Stack
 
-**Backend:** Python · Flask · SQLite · Web3.py  
-**Frontend:** React 18 · Framer Motion · Axios  
-**Blockchain:** Ethereum · Solidity · Ganache  
-**AI/Vision:** OpenCV · face_recognition · NumPy
+| Layer     | Technologies                         |
+|-----------|--------------------------------------|
+| Backend   | Python · Flask · SQLite · Gunicorn   |
+| Frontend  | React 18 · Framer Motion · Axios     |
+| Blockchain| In-memory simulator (Solidity-based) |
+| Auth      | OTP · Password hashing (SHA-256)     |
+
+---
+
+## 📄 API Endpoints
+
+| Method | Endpoint                              | Role    |
+|--------|---------------------------------------|---------|
+| GET    | `/api/health`                         | Public  |
+| POST   | `/api/login`                          | Public  |
+| POST   | `/api/voter/request-otp`              | Public  |
+| POST   | `/api/voter/verify-otp`               | Public  |
+| GET    | `/api/generate-eth-address`           | Public  |
+| GET    | `/api/admin/stats`                    | Admin   |
+| POST   | `/api/admin/create-election`          | Admin   |
+| POST   | `/api/admin/activate-election/:id`    | Admin   |
+| POST   | `/api/admin/close-election/:id`       | Admin   |
+| GET    | `/api/admin/elections`                | Admin   |
+| GET    | `/api/officer/voters`                 | Officer |
+| POST   | `/api/officer/add-voter`              | Officer |
+| PUT    | `/api/officer/update-voter/:id`       | Officer |
+| DELETE | `/api/officer/delete-voter/:id`       | Officer |
+| GET    | `/api/elections`                      | Voter   |
+| POST   | `/api/cast-vote`                      | Voter   |
+
+---
+
+## 📝 License
+
+This project is for educational and demonstration purposes.

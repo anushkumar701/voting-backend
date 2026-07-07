@@ -18,7 +18,12 @@ def init_database():
     cursor = conn.cursor()
     cursor.execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT UNIQUE NOT NULL, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('admin', 'voter', 'officer')), phone TEXT, ethereum_address TEXT UNIQUE, registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, is_active BOOLEAN DEFAULT 1)")
     cursor.execute("CREATE TABLE IF NOT EXISTS elections (id INTEGER PRIMARY KEY AUTOINCREMENT, election_id INTEGER UNIQUE NOT NULL, name TEXT NOT NULL, description TEXT, candidates TEXT NOT NULL, contract_address TEXT, created_by TEXT DEFAULT 'admin', created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, status TEXT DEFAULT 'CREATED' CHECK(status IN ('CREATED', 'ACTIVE', 'CLOSED', 'ARCHIVED')))")
-    cursor.execute("CREATE TABLE IF NOT EXISTS votes (id INTEGER PRIMARY KEY AUTOINCREMENT, election_id INTEGER NOT NULL, voter_address TEXT NOT NULL, tx_hash TEXT NOT NULL, vote_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE(election_id, voter_address))")
+    cursor.execute("CREATE TABLE IF NOT EXISTS votes (id INTEGER PRIMARY KEY AUTOINCREMENT, election_id INTEGER NOT NULL, voter_address TEXT NOT NULL, tx_hash TEXT NOT NULL, candidate_index INTEGER DEFAULT 0, vote_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE(election_id, voter_address))")
+    # Migration: add candidate_index to existing databases
+    try:
+        cursor.execute("ALTER TABLE votes ADD COLUMN candidate_index INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass  # Column already exists
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_id ON users(user_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_role ON users(role)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_election_id ON elections(election_id)")
@@ -166,11 +171,11 @@ def get_election_by_id(election_id):
         return election
     return None
 
-def record_vote(election_id, voter_address, tx_hash):
+def record_vote(election_id, voter_address, tx_hash, candidate_index=0):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO votes (election_id, voter_address, tx_hash) VALUES (?, ?, ?)", (election_id, voter_address, tx_hash))
+        cursor.execute("INSERT INTO votes (election_id, voter_address, tx_hash, candidate_index) VALUES (?, ?, ?, ?)", (election_id, voter_address, tx_hash, candidate_index))
         conn.commit()
         conn.close()
         return {"success": True}
@@ -206,6 +211,15 @@ def get_voter_stats():
     active = cursor.fetchone()[0]
     conn.close()
     return {"total": total, "active": active, "inactive": total - active}
+
+def get_all_votes():
+    """Return all vote records for blockchain simulator state reconstruction."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT election_id, voter_address, candidate_index FROM votes")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 if __name__ == "__main__":
     init_database()

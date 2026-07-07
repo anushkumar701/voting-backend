@@ -33,9 +33,5 @@ Thumbs.db
 frontend/node_modules/
 frontend/build/
 
-# Face recognition data
-face_data/
-cmake/
-
-# Contract address (sensitive)
-contract_address.txt
+# Misc
+*.bat

@@ -9,7 +9,12 @@ load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from database.db_setup import init_database, register_user, authenticate_user, get_user_by_id, get_user_by_voter_id, get_all_voters, update_voter, delete_voter_permanently, add_election, update_election_status, get_all_elections, get_election_by_id, record_vote, has_voted, get_election_stats, get_voter_stats
+from database.db_setup import (
+    init_database, register_user, authenticate_user, get_user_by_id,
+    get_user_by_voter_id, get_all_voters, update_voter, delete_voter_permanently,
+    add_election, update_election_status, get_all_elections, get_election_by_id,
+    record_vote, has_voted, get_election_stats, get_voter_stats, get_all_votes,
+)
 from utils.blockchain_utils import blockchain
 from otp_manager import OTPManager
 
@@ -21,19 +26,16 @@ app.config['JSON_SORT_KEYS'] = False
 init_database()
 otp_manager = OTPManager()
 
-def init_blockchain():
-    addr = os.getenv('CONTRACT_ADDRESS')
-    if not addr and os.path.exists('contract_address.txt'):
-        try:
-            with open('contract_address.txt', 'r') as f:
-                addr = f.read().strip()
-        except:
-            addr = None
-    if addr:
-        if blockchain.load_contract(addr):
-            print(f"[Auto] Contract loaded: {addr[:10]}...")
+# ── Sync blockchain simulator from database on startup ──────────────────
+def _sync_blockchain():
+    """Rebuild the in-memory blockchain ledger from persisted DB records."""
+    elections = get_all_elections()
+    votes = get_all_votes()
+    blockchain.sync_from_db(elections, votes)
 
-init_blockchain()
+_sync_blockchain()
+
+# ── Response helpers ────────────────────────────────────────────────────
 
 def success(data, message="Success"):
     return jsonify({"success": True, "message": message, "data": data}), 200
@@ -46,6 +48,8 @@ def sanitize_input(value):
         return value
     return re.sub(r'[^\w\s@._-]', '', str(value))
 
+# ── RBAC middleware ─────────────────────────────────────────────────────
+
 def require_role(roles):
     def decorator(f):
         @wraps(f)
@@ -57,11 +61,13 @@ def require_role(roles):
             if not user or not user.get('is_active'):
                 return error("Invalid or inactive user", 401)
             if user['role'] not in roles:
-                return error(f"Access denied", 403)
+                return error("Access denied", 403)
             request.current_user = user
             return f(*args, **kwargs)
         return wrapper
     return decorator
+
+# ── Public endpoints ────────────────────────────────────────────────────
 
 @app.route('/', methods=['GET'])
 def root():
@@ -71,22 +77,22 @@ def root():
 def health():
     return jsonify({"status": "running", "blockchain": blockchain.contract is not None}), 200
 
-@app.route('/api/ganache-accounts', methods=['GET'])
-def ganache_accounts():
-    if blockchain.web3 and blockchain.web3.is_connected():
-        accounts = blockchain.web3.eth.accounts[1:11]
-        return success({"accounts": accounts}, "Ganache accounts")
-    return error("Ganache not connected")
+@app.route('/api/generate-eth-address', methods=['GET'])
+def generate_eth_address():
+    """Generate a unique simulated Ethereum address for voter registration."""
+    return success({"address": blockchain.generate_address()}, "Address generated")
+
+# ── Auth endpoints ──────────────────────────────────────────────────────
 
 @app.route('/api/voter/request-otp', methods=['POST'])
 def request_otp():
     data = request.get_json()
     voter_id = sanitize_input(data.get('voter_id'))
     phone = sanitize_input(data.get('phone'))
-    
+
     if not voter_id or not phone:
         return error("voter_id and phone required")
-    
+
     voter = get_user_by_voter_id(voter_id)
     if not voter:
         return error("Voter not found", 404)
@@ -96,7 +102,7 @@ def request_otp():
         return error("Account deactivated")
     if voter.get('phone') != phone:
         return error("Phone number mismatch")
-    
+
     result = otp_manager.request_otp(voter_id, phone)
     if result['success']:
         return success({"expires_in_minutes": result['expires_in_minutes'], "otp_for_testing": result.get('otp_for_testing')}, result['message'])
@@ -107,18 +113,18 @@ def verify_otp():
     data = request.get_json()
     voter_id = sanitize_input(data.get('voter_id'))
     otp_code = sanitize_input(data.get('otp_code'))
-    
+
     if not voter_id or not otp_code:
         return error("voter_id and otp_code required")
-    
+
     result = otp_manager.verify_otp(voter_id, otp_code)
     if not result['success']:
         return error(result['message'], 401)
-    
+
     voter = get_user_by_voter_id(voter_id)
     if not voter:
         return error("Voter not found", 404)
-    
+
     voter.pop('password', None)
     return success(voter, "Login successful")
 
@@ -127,17 +133,19 @@ def login():
     data = request.get_json()
     email = sanitize_input(data.get('email'))
     password = data.get('password')
-    
+
     if not email or not password:
         return error("Email and password required")
-    
+
     user = authenticate_user(email, password)
     if not user:
         return error("Invalid credentials", 401)
     if user['role'] == 'voter':
         return error("Voters must use OTP login")
-    
-    return success(user, f"Login successful")
+
+    return success(user, "Login successful")
+
+# ── Admin endpoints ─────────────────────────────────────────────────────
 
 @app.route('/api/admin/stats', methods=['GET'])
 @require_role(['admin'])
@@ -151,23 +159,21 @@ def create_election():
     name = sanitize_input(data.get('name'))
     description = sanitize_input(data.get('description', ''))
     candidates = [sanitize_input(c) for c in data.get('candidates', [])]
-    
+
     if not name or len(candidates) < 2:
         return error("Name and at least 2 candidates required")
-    if not blockchain.contract:
-        return error("Contract not loaded", 503)
-    
+
     import random
     election_id = random.randint(1000, 999999)
-    
+
     bc_result = blockchain.create_election(election_id, candidates)
     if not bc_result['success']:
         return error(bc_result['message'], 500)
-    
+
     db_result = add_election(election_id, name, description, candidates, blockchain.contract_address)
     if not db_result['success']:
         return error(db_result['message'])
-    
+
     return success({"election_id": election_id, "tx_hash": bc_result['tx_hash']}, "Election created")
 
 @app.route('/api/admin/activate-election/<int:election_id>', methods=['POST'])
@@ -178,11 +184,11 @@ def activate_election(election_id):
         return error("Election not found", 404)
     if election['status'] != 'CREATED':
         return error("Only CREATED elections can be activated")
-    
+
     bc_result = blockchain.activate_election(election_id)
     if not bc_result['success']:
         return error(bc_result['message'], 500)
-    
+
     update_election_status(election_id, 'ACTIVE')
     return success({"election_id": election_id, "tx_hash": bc_result['tx_hash']}, "Election activated")
 
@@ -194,11 +200,11 @@ def close_election(election_id):
         return error("Election not found", 404)
     if election['status'] != 'ACTIVE':
         return error("Only ACTIVE elections can be closed")
-    
+
     bc_result = blockchain.close_election(election_id)
     if not bc_result['success']:
         return error(bc_result['message'], 500)
-    
+
     update_election_status(election_id, 'CLOSED')
     return success({"election_id": election_id, "tx_hash": bc_result['tx_hash']}, "Election closed")
 
@@ -210,7 +216,7 @@ def archive_election(election_id):
         return error("Election not found", 404)
     if election['status'] != 'CLOSED':
         return error("Only CLOSED elections can be archived")
-    
+
     update_election_status(election_id, 'ARCHIVED')
     return success({"election_id": election_id}, "Election archived")
 
@@ -221,12 +227,16 @@ def admin_elections():
     for e in elections:
         e['total_votes'] = 0
         e['candidates_with_votes'] = []
-        if blockchain.contract:
-            bc_result = blockchain.get_results(e['election_id'])
-            if bc_result['success']:
-                e['total_votes'] = bc_result['total_votes']
-                e['candidates_with_votes'] = [{"name": e['candidates'][i], "votes": bc_result['votes'][i]} for i in range(len(e['candidates']))]
+        bc_result = blockchain.get_results(e['election_id'])
+        if bc_result['success']:
+            e['total_votes'] = bc_result['total_votes']
+            e['candidates_with_votes'] = [
+                {"name": e['candidates'][i], "votes": bc_result['votes'][i]}
+                for i in range(len(e['candidates']))
+            ]
     return success({"elections": elections, "count": len(elections)}, "Elections retrieved")
+
+# ── Officer endpoints ───────────────────────────────────────────────────
 
 @app.route('/api/officer/stats', methods=['GET'])
 @require_role(['officer'])
@@ -243,7 +253,17 @@ def get_voters():
 @require_role(['officer'])
 def add_voter():
     data = request.get_json()
-    result = register_user(sanitize_input(data.get('user_id')), sanitize_input(data.get('name')), sanitize_input(data.get('email')), 'voter123', 'voter', sanitize_input(data.get('phone')), sanitize_input(data.get('ethereum_address')))
+    eth_address = sanitize_input(data.get('ethereum_address'))
+    if not eth_address:
+        eth_address = blockchain.generate_address()
+    result = register_user(
+        sanitize_input(data.get('user_id')),
+        sanitize_input(data.get('name')),
+        sanitize_input(data.get('email')),
+        'voter123', 'voter',
+        sanitize_input(data.get('phone')),
+        eth_address,
+    )
     if not result['success']:
         return error(result['message'])
     return success(result, "Voter added")
@@ -264,6 +284,8 @@ def delete_voter(user_id):
     if not result['success']:
         return error(result['message'])
     return success({"user_id": user_id}, "Voter deleted")
+
+# ── Shared endpoints ────────────────────────────────────────────────────
 
 @app.route('/api/elections', methods=['GET'])
 def list_elections():
@@ -295,11 +317,11 @@ def cast_vote():
     data = request.get_json()
     election_id = data.get('election_id')
     candidate_index = data.get('candidate_index')
-    
+
     voter = request.current_user
     if not voter.get('ethereum_address'):
         return error("Voter ethereum address not configured")
-    
+
     election = get_election_by_id(election_id)
     if not election:
         return error("Election not found", 404)
@@ -309,28 +331,15 @@ def cast_vote():
         return error("Invalid candidate")
     if has_voted(election_id, voter['ethereum_address']):
         return error("Already voted")
-    
+
     bc_result = blockchain.cast_vote(election_id, candidate_index, voter['ethereum_address'])
     if not bc_result['success']:
         return error(bc_result['message'])
-    
-    record_vote(election_id, voter['ethereum_address'], bc_result['tx_hash'])
+
+    record_vote(election_id, voter['ethereum_address'], bc_result['tx_hash'], candidate_index)
     return success({"tx_hash": bc_result['tx_hash']}, "Vote recorded")
 
-@app.route('/api/load-contract', methods=['POST'])
-def load_contract():
-    data = request.get_json()
-    contract_address = data.get('contract_address')
-    if not contract_address:
-        return error("contract_address required")
-    if not blockchain.load_contract(contract_address):
-        return error("Failed to load contract")
-    try:
-        with open('contract_address.txt', 'w') as f:
-            f.write(blockchain.contract_address)
-    except:
-        pass
-    return success({"contract_address": blockchain.contract_address}, "Contract loaded")
+# ────────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
     print("\n" + "="*60)

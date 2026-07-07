@@ -27,8 +27,6 @@ export default function OfficerDashboard() {
   const [user,             setUser]             = useState(null);
   const [stats,            setStats]            = useState({ total:0, active:0, inactive:0 });
   const [voters,           setVoters]           = useState([]);
-  const [ganacheAccounts,  setGanacheAccounts]  = useState([]);
-  const [usedAddresses,    setUsedAddresses]    = useState([]);
   const [showAdd,          setShowAdd]          = useState(false);
   const [editingId,        setEditingId]        = useState(null);
   const [formData,         setFormData]         = useState({ user_id:'', name:'', email:'', phone:'', ethereum_address:'' });
@@ -44,13 +42,14 @@ export default function OfficerDashboard() {
     const ud = JSON.parse(u);
     setUser(ud);
     fetchData(ud.user_id);
-    fetchGanacheAccounts();
   }, [nav]);
 
-  const fetchGanacheAccounts = async () => {
+  const generateAddress = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/api/ganache-accounts`);
-      if (res.data.success) setGanacheAccounts(res.data.data.accounts);
+      const res = await axios.get(`${API_BASE}/api/generate-eth-address`);
+      if (res.data.success) {
+        setFormData(prev => ({ ...prev, ethereum_address: res.data.data.address }));
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -63,7 +62,6 @@ export default function OfficerDashboard() {
       if (sRes.data.success) setStats(sRes.data.data);
       if (vRes.data.success) {
         setVoters(vRes.data.data.voters);
-        setUsedAddresses(vRes.data.data.voters.map(v => v.ethereum_address).filter(Boolean));
       }
     } catch (err) { console.error(err); }
   };
@@ -71,6 +69,12 @@ export default function OfficerDashboard() {
   const resetForm = () => {
     setFormData({ user_id:'', name:'', email:'', phone:'', ethereum_address:'' });
     setEditingId(null); setShowAdd(false);
+  };
+
+  const openAddForm = () => {
+    resetForm();
+    setShowAdd(true);
+    generateAddress();
   };
 
   const addVoter = async (e) => {
@@ -115,7 +119,6 @@ export default function OfficerDashboard() {
     return () => clearTimeout(t);
   }, [success, error]);
 
-  const availableAddresses = ganacheAccounts.filter(addr => !usedAddresses.includes(addr));
   const filteredVoters = voters.filter(v =>
     !searchQuery ||
     v.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -124,9 +127,9 @@ export default function OfficerDashboard() {
   );
 
   const statCards = [
-    { icon:'👥', label:'Total Voters',  value: stats.total,              color:'#00f2ff' },
-    { icon:'◉',  label:'Active',        value: stats.active,             color:'#00ff88' },
-    { icon:'⛓',  label:'ETH Available', value: availableAddresses.length, color:'#a060ff' },
+    { icon:'👥', label:'Total Voters',  value: stats.total,    color:'#00f2ff' },
+    { icon:'◉',  label:'Active',        value: stats.active,   color:'#00ff88' },
+    { icon:'⛔', label:'Inactive',      value: stats.inactive, color:'#a060ff' },
   ];
 
   return (
@@ -216,7 +219,7 @@ export default function OfficerDashboard() {
               }}
             />
             <motion.button
-              onClick={() => { resetForm(); setShowAdd(!showAdd); }}
+              onClick={() => showAdd ? resetForm() : openAddForm()}
               className="create-btn"
               style={{ background:'linear-gradient(135deg,#00cc88,#00aaff)' }}
               whileTap={{ scale:0.96 }}
@@ -242,12 +245,31 @@ export default function OfficerDashboard() {
                   {!editingId && (
                     <>
                       <input type="text" className="form-input" placeholder="Voter ID (e.g. V001)" value={formData.user_id} onChange={e => setFormData({...formData,user_id:e.target.value})} required />
-                      <select className="form-input" value={formData.ethereum_address} onChange={e => setFormData({...formData,ethereum_address:e.target.value})} required>
-                        <option value="">⛓ Select ETH Address ({availableAddresses.length} free)</option>
-                        {availableAddresses.map((addr,i) => (
-                          <option key={i} value={addr}>{addr.slice(0,20)}...{addr.slice(-6)}</option>
-                        ))}
-                      </select>
+                      <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="⛓ ETH Address (auto-generated)"
+                          value={formData.ethereum_address}
+                          readOnly
+                          style={{ flex:1, opacity:0.7, cursor:'default' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={generateAddress}
+                          title="Generate new address"
+                          style={{
+                            padding:'10px 14px',
+                            background:'rgba(0,255,136,0.08)',
+                            border:'1px solid rgba(0,255,136,0.25)',
+                            borderRadius:10,
+                            color:'#00ff88',
+                            cursor:'pointer',
+                            fontSize:16,
+                            transition:'all 0.3s',
+                          }}
+                        >⟳</button>
+                      </div>
                     </>
                   )}
                   <input type="text"  className="form-input" placeholder="Full Name"    value={formData.name}  onChange={e => setFormData({...formData,name:e.target.value})}  required />
