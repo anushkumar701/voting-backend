@@ -2,7 +2,10 @@
   "name": "evoting-meets-blockchain",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
-    "build": "npm install --prefix frontend --legacy-peer-deps && npm run build --prefix frontend"
+    "build": "npm run build --workspace=frontend"
   }
 }
