@@ -189,10 +189,10 @@ export default function VoterDashboard() {
   };
 
   useEffect(() => {
-    if (!error) return;
-    const t = setTimeout(() => setError(''), 4000);
+    if (!error && !success) return;
+    const t = setTimeout(() => { setError(''); setSuccess(''); }, 4000);
     return () => clearTimeout(t);
-  }, [error]);
+  }, [error, success]);
 
   const activeElections = elections.filter(e => e.status === 'ACTIVE');
 
@@ -239,9 +239,10 @@ export default function VoterDashboard() {
 
       {/* ── Alerts ── */}
       <AnimatePresence>
-        {error && (
+        {(error || success) && (
           <motion.div className="alerts" initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}} exit={{opacity:0}}>
-            <div className="alert error">⚠ {error}</div>
+            {error && <div className="alert error">⚠ {error}</div>}
+            {success && <div className="alert success">✓ {success}</div>}
           </motion.div>
         )}
       </AnimatePresence>

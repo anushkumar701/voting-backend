@@ -109,15 +109,27 @@ Admin: Archive          →  ARCHIVED
 
 ## ⚙️ Deployment
 
-### Backend (Railway / Render)
-1. Connect this repository
-2. Set environment variables from `.env.example`
-3. Deploy — uses `Procfile` for Gunicorn
+### Frontend Deployment (Vercel)
+1. **Option A: GitHub Integration (Recommended)**
+   - Go to [vercel.com/new](https://vercel.com/new) and import your repository.
+   - Set **Root Directory**: `frontend`
+   - Set **Framework Preset**: `Create React App`
+   - In **Environment Variables**, add:
+     - `REACT_APP_API_URL` = `https://your-backend-service.up.railway.app` (or your Flask server URL)
+   - Click **Deploy**.
 
-### Frontend (Netlify)
-1. Base directory: `frontend`
-2. Build command: `npm install --legacy-peer-deps && npm run build`
-3. Set `REACT_APP_API_URL` to your backend URL
+2. **Option B: Vercel CLI**
+   ```bash
+   cd frontend
+   npx vercel
+   ```
+   Follow the prompts to connect your account and deploy!
+
+### Full-Stack Monorepo Deployment (Vercel)
+This repository includes a root `vercel.json` and `api/index.py` configured for Vercel Serverless Functions:
+1. Import the root repository in Vercel.
+2. In **Environment Variables**, add `FRONTEND_URL` pointing to your Vercel deployment URL.
+3. Click **Deploy**.
 
 ---
 
@@ -145,6 +157,7 @@ Admin: Archive          →  ARCHIVED
 | POST   | `/api/admin/create-election`          | Admin   |
 | POST   | `/api/admin/activate-election/:id`    | Admin   |
 | POST   | `/api/admin/close-election/:id`       | Admin   |
+| DELETE | `/api/admin/delete-election/:id`      | Admin   |
 | GET    | `/api/admin/elections`                | Admin   |
 | GET    | `/api/officer/voters`                 | Officer |
 | POST   | `/api/officer/add-voter`              | Officer |

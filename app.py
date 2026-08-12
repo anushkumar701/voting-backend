@@ -12,15 +12,16 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from database.db_setup import (
     init_database, register_user, authenticate_user, get_user_by_id,
     get_user_by_voter_id, get_all_voters, update_voter, delete_voter_permanently,
-    add_election, update_election_status, get_all_elections, get_election_by_id,
+    add_election, update_election_status, delete_election, get_all_elections, get_election_by_id,
     record_vote, has_voted, get_election_stats, get_voter_stats, get_all_votes,
 )
 from utils.blockchain_utils import blockchain
 from otp_manager import OTPManager
 
 app = Flask(__name__)
-_frontend_url = os.getenv('FRONTEND_URL')
-CORS(app, origins=[_frontend_url] if _frontend_url else '*')
+frontend_env = os.getenv('FRONTEND_URL', '')
+origins = [url.strip().rstrip('/') for url in frontend_env.split(',') if url.strip()] if frontend_env else '*'
+CORS(app, resources={r"/*": {"origins": origins}}, supports_credentials=True)
 app.config['JSON_SORT_KEYS'] = False
 
 init_database()
@@ -219,6 +220,21 @@ def archive_election(election_id):
 
     update_election_status(election_id, 'ARCHIVED')
     return success({"election_id": election_id}, "Election archived")
+
+@app.route('/api/admin/delete-election/<int:election_id>', methods=['DELETE'])
+@require_role(['admin'])
+def delete_election_route(election_id):
+    election = get_election_by_id(election_id)
+    if not election:
+        return error("Election not found", 404)
+    if election['status'] == 'ACTIVE':
+        return error("Cannot delete an active election. Close it first.")
+
+    blockchain.delete_election(election_id)
+    result = delete_election(election_id)
+    if not result['success']:
+        return error(result['message'])
+    return success({"election_id": election_id}, "Election deleted")
 
 @app.route('/api/admin/elections', methods=['GET'])
 @require_role(['admin'])

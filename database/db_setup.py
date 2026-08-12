@@ -3,7 +3,27 @@ import os
 import hashlib
 import json
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'voting.db')
+def get_db_path():
+    env_path = os.getenv('DB_PATH')
+    if env_path:
+        os.makedirs(os.path.dirname(os.path.abspath(env_path)), exist_ok=True)
+        return env_path
+
+    default_dir = os.path.dirname(os.path.abspath(__file__))
+    default_path = os.path.join(default_dir, 'voting.db')
+
+    try:
+        test_file = os.path.join(default_dir, '.write_test')
+        with open(test_file, 'w') as f:
+            f.write('1')
+        os.remove(test_file)
+        return default_path
+    except (IOError, OSError, PermissionError):
+        tmp_dir = os.path.join('/tmp', 'voting_db')
+        os.makedirs(tmp_dir, exist_ok=True)
+        return os.path.join(tmp_dir, 'voting.db')
+
+DB_PATH = get_db_path()
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
@@ -35,6 +55,14 @@ def init_database():
     cursor.execute("SELECT COUNT(*) FROM users WHERE role='officer'")
     if cursor.fetchone()[0] == 0:
         cursor.execute("INSERT INTO users (user_id, name, email, password, role) VALUES (?, ?, ?, ?, ?)", ('OFFICER001', 'Election Officer', 'officer@admin.com', hash_password('officer123'), 'officer'))
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role='voter'")
+    if cursor.fetchone()[0] == 0:
+        import secrets
+        v1_addr = "0x" + secrets.token_hex(20)
+        v2_addr = "0x" + secrets.token_hex(20)
+        pw_hash = hash_password('voter123')
+        cursor.execute("INSERT INTO users (user_id, name, email, password, role, phone, ethereum_address) VALUES (?, ?, ?, ?, ?, ?, ?)", ('V001', 'Alice Voter', 'voter1@example.com', pw_hash, 'voter', '555-0101', v1_addr))
+        cursor.execute("INSERT INTO users (user_id, name, email, password, role, phone, ethereum_address) VALUES (?, ?, ?, ?, ?, ?, ?)", ('V002', 'Bob Voter', 'voter2@example.com', pw_hash, 'voter', '555-0102', v2_addr))
     conn.commit()
     conn.close()
 
@@ -51,12 +79,19 @@ def register_user(user_id, name, email, password, role, phone=None, ethereum_add
         conn.close()
         return {"success": True, "user_id": user_id}
     except sqlite3.IntegrityError as e:
-        return {"success": False, "message": str(e)}
+        msg = str(e)
+        if "user_id" in msg:
+            return {"success": False, "message": "Voter ID already exists"}
+        if "email" in msg:
+            return {"success": False, "message": "Email already exists"}
+        if "ethereum_address" in msg:
+            return {"success": False, "message": "Ethereum address already in use"}
+        return {"success": False, "message": "User registration failed: constraint violation"}
 
 def authenticate_user(email, password):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE email=? AND password=? AND is_active=1", (email, hash_password(password)))
+    cursor.execute("SELECT * FROM users WHERE LOWER(email)=LOWER(?) AND password=? AND is_active=1", (email, hash_password(password)))
     row = cursor.fetchone()
     conn.close()
     if row:
@@ -66,9 +101,11 @@ def authenticate_user(email, password):
     return None
 
 def get_user_by_id(user_id):
+    if not user_id:
+        return None
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE user_id=?", (user_id,))
+    cursor.execute("SELECT * FROM users WHERE LOWER(user_id)=LOWER(?)", (user_id,))
     row = cursor.fetchone()
     conn.close()
     if row:
@@ -145,6 +182,21 @@ def update_election_status(election_id, status):
     conn.commit()
     conn.close()
     return {"success": True}
+
+def delete_election(election_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM votes WHERE election_id=?", (election_id,))
+        cursor.execute("DELETE FROM elections WHERE election_id=?", (election_id,))
+        conn.commit()
+        deleted = cursor.rowcount > 0
+        conn.close()
+        if deleted:
+            return {"success": True, "message": "Election deleted"}
+        return {"success": False, "message": "Election not found"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
 
 def get_all_elections():
     conn = get_db_connection()

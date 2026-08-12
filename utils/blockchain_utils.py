@@ -123,6 +123,13 @@ class BlockchainSimulator:
         print(f"[Blockchain] Election {election_id} closed")
         return {"success": True, "tx_hash": self._tx_hash()}
 
+    def delete_election(self, election_id):
+        if election_id in self._elections:
+            del self._elections[election_id]
+            print(f"[Blockchain] Election {election_id} deleted")
+            return {"success": True}
+        return {"success": False, "message": "Election not found on chain"}
+
     # ── Voting ──────────────────────────────────────────────────────────
 
     def cast_vote(self, election_id, candidate_index, voter_address):

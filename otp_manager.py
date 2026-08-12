@@ -4,12 +4,15 @@ Handles OTP generation, verification, rate limiting
 """
 import random
 import time
+import os
+import math
 import sqlite3
 from datetime import datetime, timedelta
+from database.db_setup import DB_PATH
 
 class OTPManager:
-    def __init__(self, db_path="database/voting.db"):
-        self.db_path = db_path
+    def __init__(self, db_path=None):
+        self.db_path = db_path or DB_PATH
         self.OTP_EXPIRY_MINUTES = 5
         self.MAX_ATTEMPTS = 3
         self.LOCKOUT_MINUTES = 60
@@ -62,7 +65,7 @@ class OTPManager:
         if result:
             locked_until = datetime.fromisoformat(result[0])
             if datetime.now() < locked_until:
-                remaining = (locked_until - datetime.now()).seconds // 60
+                remaining = max(1, math.ceil((locked_until - datetime.now()).total_seconds() / 60))
                 return True, remaining
         
         return False, 0
