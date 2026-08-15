@@ -7,7 +7,7 @@ import re
 
 load_dotenv()
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database.db_setup import (
     init_database, register_user, authenticate_user, get_user_by_id,
