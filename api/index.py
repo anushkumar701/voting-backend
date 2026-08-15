@@ -1,12 +1,10 @@
 import os
-from flask import Flask, jsonify
+import sys
 
-app = Flask(__name__)
+# Add root directory to python path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
-def catch_all(path):
-    return jsonify({
-        "status": "alive",
-        "message": "Minimal Vercel Python Function is working!"
-    }), 200
+from app import app
+
+# Export WSGI application for Vercel Serverless Functions
+app = app
