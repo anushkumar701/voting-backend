@@ -61,11 +61,20 @@ export default function VoterLogin() {
         nav('/voter-dashboard');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'OTP verification failed');
+      setError(err.response?.data?.message || 'Invalid OTP');
     } finally { setLoading(false); }
   };
 
-  /* OTP digit display helper */
+  const fillTestCredentials = (voterNum) => {
+    if (voterNum === 1) {
+      setVoterId('V001');
+      setPhone('555-0101');
+    } else {
+      setVoterId('V002');
+      setPhone('555-0102');
+    }
+  };
+
   const otpDigits = otpForTesting ? otpForTesting.split('') : [];
 
   return (
@@ -223,6 +232,37 @@ export default function VoterLogin() {
               >
                 {loading ? 'SENDING OTP...' : 'REQUEST OTP →'}
               </motion.button>
+
+              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => fillTestCredentials(1)}
+                  style={{
+                    flex: 1, padding: '8px', background: 'rgba(200,0,255,0.05)',
+                    border: '1px dashed rgba(200,0,255,0.2)', borderRadius: '12px',
+                    color: 'rgba(200,0,255,0.5)', cursor: 'pointer', fontSize: '11px',
+                    fontFamily: "'Share Tech Mono', monospace", letterSpacing: '1px', transition: 'all 0.3s',
+                  }}
+                  onMouseEnter={e => e.target.style.borderColor = 'rgba(200,0,255,0.45)'}
+                  onMouseLeave={e => e.target.style.borderColor = 'rgba(200,0,255,0.2)'}
+                >
+                  ⚡ USE VOTER 1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fillTestCredentials(2)}
+                  style={{
+                    flex: 1, padding: '8px', background: 'rgba(200,0,255,0.05)',
+                    border: '1px dashed rgba(200,0,255,0.2)', borderRadius: '12px',
+                    color: 'rgba(200,0,255,0.5)', cursor: 'pointer', fontSize: '11px',
+                    fontFamily: "'Share Tech Mono', monospace", letterSpacing: '1px', transition: 'all 0.3s',
+                  }}
+                  onMouseEnter={e => e.target.style.borderColor = 'rgba(200,0,255,0.45)'}
+                  onMouseLeave={e => e.target.style.borderColor = 'rgba(200,0,255,0.2)'}
+                >
+                  ⚡ USE VOTER 2
+                </button>
+              </div>
             </motion.form>
           ) : (
             <motion.form

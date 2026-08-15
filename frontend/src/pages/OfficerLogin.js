@@ -48,6 +48,11 @@ export default function OfficerLogin() {
     } finally { setLoading(false); }
   };
 
+  const fillTestCredentials = () => {
+    setEmail('officer@admin.com');
+    setPassword('officer123');
+  };
+
   return (
     <div className="login-container" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
       <div className="cyber-bg">
@@ -173,6 +178,28 @@ export default function OfficerLogin() {
           >
             {loading ? 'AUTHENTICATING...' : 'ACCESS SYSTEM'}
           </motion.button>
+
+          <button
+            type="button"
+            onClick={fillTestCredentials}
+            style={{
+              marginTop: '6px',
+              padding: '10px',
+              background: 'rgba(0,255,136,0.05)',
+              border: '1px dashed rgba(0,255,136,0.2)',
+              borderRadius: '12px',
+              color: 'rgba(0,255,136,0.5)',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontFamily: "'Share Tech Mono', monospace",
+              letterSpacing: '1px',
+              transition: 'all 0.3s',
+            }}
+            onMouseEnter={e => e.target.style.borderColor = 'rgba(0,255,136,0.45)'}
+            onMouseLeave={e => e.target.style.borderColor = 'rgba(0,255,136,0.2)'}
+          >
+            ⚡ USE TEST CREDENTIALS
+          </button>
         </form>
 
         <div className="links">
