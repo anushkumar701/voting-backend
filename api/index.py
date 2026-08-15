@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
-    from app import app as flask_app
+    from server import app as flask_app
     app = flask_app
 except Exception as e:
     import traceback
