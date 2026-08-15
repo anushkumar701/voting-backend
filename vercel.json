@@ -1,14 +1,23 @@
 {
+  "outputDirectory": "frontend/build",
   "builds": [
     {
-      "src": "server.py",
+      "src": "package.json",
+      "use": "@vercel/static-build"
+    },
+    {
+      "src": "app_backend.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/app_backend.py"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/server.py"
+      "dest": "/index.html"
     }
   ]
 }
