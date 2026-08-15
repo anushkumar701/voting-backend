@@ -1,76 +1,70 @@
+<div align="center">
+  
 # 🗳️ Secure E-Voting System
+**A Next-Generation Electronic Voting Platform Built on Blockchain-Simulated Immutability**
 
-A full-stack electronic voting platform with **blockchain-simulated immutability**, **role-based access control**, **OTP authentication**, and a polished **React** frontend.
+[![Vercel Deployment](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel&logoColor=white)](https://vercel.com)
+[![React](https://img.shields.io/badge/Frontend-React_18-61DAFB?logo=react&logoColor=black)](#)
+[![Flask](https://img.shields.io/badge/Backend-Flask_2.3.2-white?logo=flask&logoColor=black)](#)
+[![Python](https://img.shields.io/badge/Language-Python_3.12-3776AB?logo=python&logoColor=white)](#)
 
-> Built with Flask · React 18 · SQLite · Framer Motion
-
----
-
-## ✨ Features
-
-- **Three-role architecture** — Admin, Election Officer, and Voter portals
-- **Blockchain-simulated ledger** — Tamper-proof election records with cryptographic transaction hashes
-- **OTP authentication** — 6-digit OTP with expiry and lockout protection for voters
-- **Election lifecycle** — Create → Activate → Vote → Close → Archive
-- **Real-time vote tallying** — Live candidate vote bars on the admin dashboard
-- **Auto-generated Ethereum addresses** — Unique voter identities assigned automatically
-- **Responsive cyberpunk UI** — Dark-themed interface with micro-animations
+</div>
 
 ---
 
-## 🚀 Quick Start
+## 📖 Overview
+
+The **Secure E-Voting System** is a full-stack, monorepo architecture web application designed to solve the challenges of modern digital elections. It combines the seamless user experience of a React SPA (Single Page Application) with a highly secure Python Flask backend. 
+
+To guarantee the integrity of election data, the system utilizes a **custom blockchain-simulated ledger**, ensuring that all cryptographic transaction hashes are tamper-proof and immutable. Access is strictly governed through a robust three-tier role-based access control (RBAC) system.
+
+---
+
+## ✨ Key Features
+
+* **🛡️ Three-Tier Role Architecture**: 
+  * **System Admin**: Oversees the entire platform, monitors real-time vote tallies, and manages election officers.
+  * **Election Officer**: Creates, manages, and cycles the states of elections (Create → Activate → Close → Archive).
+  * **Voter**: Authenticates securely and casts votes in a frictionless, mobile-responsive UI.
+* **🔗 Blockchain-Simulated Ledger**: Every vote is recorded as an immutable transaction with a cryptographic hash, ensuring transparency and preventing tampering.
+* **🔐 Multi-Factor OTP Authentication**: Voters are protected by a 6-digit OTP verification system, complete with expiry constraints and brute-force lockout mechanisms.
+* **⚡ Vercel Serverless Ready**: Architected specifically to deploy flawlessly on Vercel's serverless infrastructure, utilizing dynamic `/tmp` disk fallback mechanisms.
+* **🎨 Cyber-Minimalist UI**: A dark-themed, glassmorphic UI powered by `framer-motion` for buttery smooth micro-animations.
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD;
+    A[React 18 Frontend] -->|REST API Calls| B[Vercel Edge Network];
+    B -->|Serverless Functions| C[Flask 2.3 WSGI Adapter];
+    C --> D[Flask Python Backend];
+    D <--> E[(SQLite Database /tmp Fallback)];
+    D <--> F[Blockchain Hash Simulator];
+    D <--> G[OTP Manager];
+```
+
+---
+
+## 🚀 Local Development
 
 ### Prerequisites
-- Python 3.10+
-- Node.js 18+
+* **Node.js** (v18+)
+* **Python** (v3.10+)
 
-### 1. Backend
+### 1. Start the Python Backend
 ```bash
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the server
+# Start the Flask API
 python app.py
 ```
-Backend starts at `http://localhost:5000`
-
-### 2. Frontend
-```bash
-cd frontend
-npm install
-npm start
-```
-Frontend starts at `http://localhost:3000`
-
----
-
-## 🔐 Default Credentials
-
-| Role    | Login                  | Method            |
-|---------|------------------------|-------------------|
-| Admin   | admin@admin.com        | Password: admin123|
-| Officer | officer@admin.com      | Password: officer123|
-| Voter   | Voter ID (e.g. V001)  | OTP via phone     |
-
----
-
-## 🏗️ Project Structure
-
-```
-voting-backend/
-├── app.py                     ← Flask REST API (main entry)
-├── otp_manager.py             ← OTP generation & verification
-├── requirements.txt           ← Python dependencies
-├── Procfile                   ← Production server config
-│
-├── database/
-│   └── db_setup.py            ← SQLite schema & queries
-│
-├── utils/
-│   └── blockchain_utils.py    ← Blockchain simulator engine
-│
-├── contracts/
-│   ├── SecureVoting.sol        ← Original Solidity smart contract
 │   └── SecureVoting_ABI.json   ← Contract ABI reference
 │
 └── frontend/                  ← React 18 SPA
