@@ -1,23 +1,12 @@
 import os
-import sys
+from flask import Flask, jsonify
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+app = Flask(__name__)
 
-try:
-    from app import app
-except Exception as e:
-    import traceback
-    from flask import Flask, jsonify
-    
-    app = Flask(__name__)
-    error_message = str(e)
-    error_traceback = traceback.format_exc()
-    
-    @app.route('/', defaults={'path': ''})
-    @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
-    def catch_all(path):
-        return jsonify({
-            "error": "Initialization failed in api/index.py",
-            "message": error_message,
-            "traceback": error_traceback
-        }), 500
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def catch_all(path):
+    return jsonify({
+        "status": "alive",
+        "message": "Minimal Vercel Python Function is working!"
+    }), 200
